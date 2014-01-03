@@ -1,0 +1,60 @@
+# vim: et ts=8 sts=2 sw=2
+package.CoralAvailability = {
+
+  build-system = happytrails;
+
+  interfaces = (1.0);
+  flavors = {
+    map = single;
+    generation = 1;
+  };
+
+  deploy = {
+    generic = true;
+  };
+
+  scope = framework;
+
+  build-environment = {
+    chroot = basic;
+    network-access = blocked;
+  };
+
+  caching-behavior = {
+    additional-directories = (brazil-documentation);
+  };
+
+  dependencies = {
+    1.0 = {
+      CoralDThrottleClient = 1.0;
+      CoralService = 1.0;
+      CoralOrchestrator = 1.0;
+      JakartaCommons-logging-api = 1.1;
+      CoralCommons = 1.0;
+      CoralThrottleAPI = 1.0;
+    };
+  };
+
+  test-dependencies = {
+    1.0 = {
+      junit = 4;
+      Mockito = 1;
+    };
+  };
+
+  build-tools = {
+    1.0 = {
+      JDK = 1.7;
+      HappierTrails = 3.1;
+
+      # For generating synthetic exception types
+      CoralGenerator = 1.0;
+      CoralAvailabilityModel = 1.0;
+    };
+  };
+
+  targets = {
+    CoralAvailability-1.0 = { type = javalibrary; };
+  };
+
+};

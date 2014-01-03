@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+
+<project xmlns:ht="happytrails" name="DatagramConverter-1.0" basedir="." default="release">
+
+  <import file="${happytrails.root}/happytrails.xml" optional="false"/>
+
+  <!-- Properties available from happytrails.xml :
+    run.classpath, test.classpath, build.classpath
+    verbose, output.dir, unit.test.dir -->
+
+  <ht:import file="brazil-unit-test.xml"/>
+
+  <property name="classes.dir"                 location="${output.dir}/private/classes"/> 
+  <property name="lib.dir"                     location="${output.dir}/lib"/> 
+	
+  <target name="init">
+    <mkdir dir="${classes.dir}"/>
+    <mkdir dir="${lib.dir}"/>
+  </target>
+	
+  <target name="run-unit-tests">
+    <echo message="Running Unit Tests..." />
+    <!-- Add your unit tests here. To publish your tests in Brazil make sure you
+         have an xml formatter and the "todir" attribute is set to ${unit.test.dir}.
+         Note that you can also have an additional formatters which output to console.
+
+         Example:
+
+         <junit printsummary="yes" haltonfailure="yes" fork="true">
+           <classpath>
+             <path path="${bp:testbuild.classpath}"/>
+             <path path="${classes.dir}"/>
+             <path path="${test.dir}"/>
+           </classpath>
+
+           <formatter type="brief" usefile="no"/>
+
+           <formatter type="xml"/>
+
+           <batchtest fork="yes" todir="${unit.test.dir}">
+              <fileset dir="${basedir}/main/tests">
+                <include name="**/*.java"/>
+              </fileset>
+           </batchtest>
+        </junit>
+    -->
+
+  </target>
+
+  <!-- You will only need to modify this target if your test results were outputted to 
+       a directory other than ${unit.test.dir} --> 
+  <target name="unit-tests" depends="run-unit-tests">
+    <brazilunittest testResultsDir="${unit.test.dir}" brazilUnitTestsDir="${unit.test.dir}"/>
+  </target>
+
+  <target name="test" depends="unit-tests">
+  </target>
+
+  <target name="compile" depends="init">
+      <!-- Compile sources for a 1.4 target -->
+      <javac destdir="${classes.dir}" source="1.4" target="1.4" debug="on">
+        <compilerarg line="-Xlint"/>
+        <classpath>
+          <path path="${bp:build.classpath}"/>
+        </classpath>
+        <src path="${basedir}/src"/>
+      </javac>
+  </target>
+	
+  <target name="jar" depends="compile">
+    <!-- Create a Jar with a manifest that will hold the program -->
+    <jar destfile="${lib.dir}/${ant.project.name}.jar" basedir="${classes.dir}" includes="**/*.class">
+    </jar>
+  </target>
+	
+  <target name="release" depends="jar,unit-tests" description="PackageBuilder entry point">
+  </target>
+
+</project>

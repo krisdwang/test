@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+    <!-- Reproduces beans-A-fj-chain using the easier to use LivePlan -->
+    
+    <bean id="tally" class="com.amazon.coral.tally.Tally" />
+    
+    <bean id="listener" class="com.amazon.coral.spring.director.test.sample.ListenerLoggerPlus">
+        <constructor-arg ref="tally" />
+    </bean>
+    
+    <bean id="workerA" class="com.amazon.coral.spring.director.test.sample.WorkerA">
+        <constructor-arg ref="tally" />
+    </bean>
+    <bean id="workerB" class="com.amazon.coral.spring.director.test.sample.WorkerB">
+        <constructor-arg ref="tally" />
+    </bean>
+    <bean id="workerC" class="com.amazon.coral.spring.director.test.sample.WorkerC">
+        <constructor-arg ref="tally" />
+    </bean>
+        
+    <bean id="dcw1" class="com.amazon.coral.spring.director.fj.DubiousConfigWarnStrategy" />
+    <bean id="dcw2" class="com.amazon.coral.spring.director.fj.DubiousConfigWarnStrategy" />
+    
+    <bean id="eoj1" class="com.amazon.coral.spring.director.fj.ExceptionsOnJoinRethrowFirstStrategy"/>
+    <bean id="eoj2" class="com.amazon.coral.spring.director.fj.ExceptionsOnJoinRethrowFirstStrategy"/>
+    
+    <bean id="plan" class="com.amazon.coral.spring.director.live.LivePlan">
+        <property name="startupListener" ref="listener" />
+        <property name="startupTimeout" value="100000" />
+        <property name="startupTick" value="205" />
+        <property name="startupDubiousConfigStrategy" ref="dcw1"/>
+        <property name="startupExceptionsOnJoinStrategy" ref="eoj1"/>
+        
+        <property name="shutdownListener" ref="listener" />
+        <property name="shutdownTimeout" value="100001" />
+        <property name="shutdownTick" value="206" />
+        <property name="shutdownDubiousConfigStrategy" ref="dcw2"/>
+        <property name="shutdownExceptionsOnJoinStrategy" ref="eoj2"/>
+        
+        <property name="targets" value="#{{@workerA,@workerB,@workerC}}"/>
+    </bean>
+</beans>

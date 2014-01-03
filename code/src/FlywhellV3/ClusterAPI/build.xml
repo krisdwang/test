@@ -1,0 +1,135 @@
+<?xml version="1.0" ?>
+ <project xmlns:ht="happytrails" name="ClusterAPI" default="release">
+   
+   <import file="${happytrails.root}/happytrails.xml"/>
+ 
+   <!-- At this point new Ant Properties are available:
+ 
+        * run.classpath
+          Compile time classpath. This corresponds to dependencies that
+          come from the transative closure of your Config file 
+          dependencies section.
+        * test.classpath
+          Test classpath. This corresponds to dependencies that
+          come from the transative closure of your Config file 
+          test-dependencies section.  
+        * build.classpath  
+          Build classpath. This corresponds to dependencies that
+          come from the transative closure of your Config file 
+          build-tools section.
+        * verbose
+          Verbosity flag. This will be set to "no" unless this
+          build is being run through PackageBuilder.
+        * output.dir
+          Location of your build output directory. This is where all
+          artifacts you produce need to be. This is an alias for
+          the amazon.ht2.bd.lib.output.dir property.
+    -->
+  <property name="lib.dir" location="${output.dir}/lib"/> 
+  <property name="classes.dir" location="${output.dir}/private/classes"/> 
+  <property name="test.dir" location="${output.dir}/private/classes/test"/> 
+  <property name="test.data" location="${output.dir}/private/testdata"/> 
+
+  <available
+     property="junit.present"
+     classname="junit.framework.TestCase"
+  />
+
+  <target name="printclasspath">
+    <echo>Value of classpath is: ${bp:build.classpath}</echo>
+  </target>
+
+  <target name="compile"> 
+
+    <mkdir dir="${classes.dir}"/>
+    <javac srcdir="${basedir}/src/main/java" destdir="${classes.dir}" source="1.5" target="1.5" debug="on">
+      <classpath>
+        <path path="${bp:build.classpath}"/>
+      </classpath>
+    </javac>
+
+    <!-- Tests are compiled to a seperate location -->
+    <mkdir dir="${test.dir}"/>
+    <mkdir dir="${basedir}/src/test/java"/>
+    <javac srcdir="${basedir}/src/test/java" destdir="${test.dir}" source="1.5" target="1.5" debug="on">
+      <classpath>
+        <path path="${bp:testbuild.classpath}"/>
+        <path path="${classes.dir}"/>
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="test" depends="compile,test-init" description="Execute a simple test">
+    <junit printsummary="false" haltonfailure="true" fork="yes">
+      <classpath>
+        <path path="${bp:testbuild.classpath}"/>
+        <path path="${classes.dir}"/>
+        <path path="${test.dir}"/>
+      </classpath>
+      <sysproperty key="bdbdir" value="${test.data}"/>
+      <formatter type="brief" usefile="false"/>
+      <test name="${testcase}" todir="${output.dir}/private" if="testcase"/>
+      <batchtest todir="${output.dir}/private" unless="testcase" >
+      <fileset dir="${test.dir}">
+        <include name="**/*Test.class"/>
+        <exclude name="**/*Test$*.class"/>
+      </fileset>
+      </batchtest>
+      <assertions> <enable/> </assertions>
+    </junit>
+  </target>
+
+  <path id="all.classpath">
+    <pathelement path="${bp:testbuild.classpath}"/>
+    <pathelement path="${classes.dir}"/>
+    <pathelement path="${test.dir}"/>
+  </path>
+
+  <target name="debug.test" depends="compile,test-init" description="Execute a single test in jdb">
+    <java classname="org.junit.runner.JUnitCore" fork="yes">
+      <classpath>
+        <path refid="all.classpath"/>
+      </classpath>
+      <sysproperty key="bdbdir" value="${test.data}"/>
+      <arg value="${testcase}"/>
+      <jvmarg value="-Xdebug"/>
+      <jvmarg value="-Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=y"/>
+    </java>
+  </target>
+
+  <target name="test-init">
+    <fail unless="junit.present">
+      #
+      ##################################################################
+      JUnit not found.
+      Please make sure junit.jar is in ANT_HOME/lib, or made available
+      to Ant using other mechanisms like -lib or CLASSPATH.
+      ##################################################################
+    </fail>
+    <delete dir="${test.data}"/>
+    <mkdir dir="${test.data}"/>
+  </target>
+
+  <target name="jar" depends="compile" description="Build a jar">
+    <mkdir dir="${lib.dir}"/>
+    <tstamp>
+      <format property="BUILD_TS" pattern="yyyy-MM-dd hh:mm Z" locale="en,US"/>
+    </tstamp>
+    <jar destfile="${lib.dir}/cluster-api-1.0.jar"
+         basedir="${classes.dir}"
+         includes="**/*.class">
+      <manifest>
+        <attribute name="Built-By" value="${user.name}"/>
+        <section name="com/amazon/cluster/">
+          <attribute name="Implementation-Title" value="ClusterAPI"/>
+          <attribute name="Implementation-Version" value="${BUILD_TS}"/> 
+          <attribute name="Implementation-Vendor" value="dse-messaging@amazon.com"/>
+        </section>
+      </manifest>    
+    </jar>
+  </target>
+
+  <target name="release" depends="jar"
+    description="PackageBuilder entry point"/> 
+
+ </project>

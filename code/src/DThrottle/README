@@ -1,0 +1,91 @@
+DThrottle - Distributed Throttling Daemon
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+DThrottle is a program that does collective throttling of requests over a group of onlines. 
+
+DThrottle is generic in the sense that it is not married to any particular application or web-server. It is a daemon that listens on a Unix/inet stream socket for connections from such applications and can answer the question "Should this particular client's request be served or throttled?" A client is identified to DThrottle with a 'throttling tag'. This could be the client's IP address, or AWS devtoken, or anything else you want to throttle by. To DThrottle the throttling tag is just a string it can answer queries about.
+
+DThrottle is designed to have one instance running per machine, but can process concurrent requests from many workers. For example, if apache forks() 20 children, each one can connect to DThrottle and make requests independently.
+
+DThrottle periodically communicates with other instances of itself running on other machines via pub-sub. DThrottle's messages are multicast at a (configurable) constant rate, but the size of these messages will be proportional to the number of unique throttling tags seen since the last multicast. There is no DThrottle server/service -- all operation is peer-to-peer.
+
+DThrottle is a compromise between doing only local throttling (mod_throttle) and having a centralized throttling server which see all client requests. Local throttling cannot control client's request rate when there are many onlines serving requests behind a load balancer. A centralized throttling server has the drawbacks of being a central point of failure, causing network traffic proportional to the rate of client requests, and must be able to scale up to the aggregate client load. DThrottle makes throttling *decisions* locally so they are fast, but takes into account the aggregate information it hears from other instances' multicasted reports.
+
+Textbook Leaky Bucket Algorithm
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DThrottle uses the leaky bucket throttling algorithm. Each client whose request rate is to be throttled is allocated a 'bucket' which holds 'tokens'. Whenever the client makes a request, he consumes one token from his bucket. If there are no tokens in the bucket for the client to consume then his request is throttled. The bucket is refilled with tokens at a constant rate, but it has a certain capacity of tokens which cannot be exceeded. The algorithm has two parameters: 'burst' which the capacity of the bucket (in tokens) and 'rate' -- the rate in tokens per second at which the bucket is replenished. The leaky bucket algorithm has the following effect on client requests: A new client can make 'burst' requests as fast as it cares to, but then must wait for new tokens before it can continue. The effect is that no client's long term average request rate can exceed 'rate'.
+
+DThrottle's Leaky Bucket
+~~~~~~~~~~~~~~~~~~~~~~~~
+Each instance of DThrottle uses the leaky bucket algorithm to throttle clients, except for the following modification. Periodically, DThrottle multicasts a report of all the throttling tags it has seen in the last period, and the number of 'hits' it saw from each one. Other instances of DThrottle receive these reports and subtract a token from each client's local bucket for every external hit they hear about. This means that no matter which online a client's request hits, it will consume a token from it's bucket on every online (just not right away).
+
+Here's an example to illustrate: Suppose there are two onlines called A and B, each running DThrottle, and each processing client's HTTP requests behind a load balancer which randomly chooses one online to process each request. Suppose also that our throttling policy is burst = 10 tokens, and rate = 1 token/second. Finally, suppose our DThrottle instances are configured to exchange messages every 5 seconds.
+
+Time	Action					Bucket on A	Bucket on B
+t=0							10		10
+
+t=0.1	C makes 17 requests as fast as possible,	1		2
+	and the load balancer sends 9 to A and 
+	8 to B.
+
+At this point none of C's requests have been throttled because each DThrottle
+saw that it had enough tokens it its bucket. C was free to make 17 requests per second -- way above the long term average of 1/sec that we specified.
+
+t=0.2	C makes two more requests which both randomly	0		2
+	hit online A.
+
+Finally, C's bucket on A runs out of tokens and so A refuses to serve C's second request.
+
+t=5	DThrottles exchange the following messages:
+
+A's multicast message:
+Throttle Tag	Hit Count
+-------------------------
+204.112.101.1	2
+212.132.96.2	4
+C		10	<--- A served 10 requests to C in the last 5s period
+196.44.2.71	1
+...
+-------------------------
+
+B's multicast message:
+Throttle Tag	Hit Count
+-------------------------
+C		8	<--- B served 8 requests to C in the last 5s period
+...
+-------------------------
+
+t=5.1	Each DThrottle has processed the other's	-8+5 		-8+5 
+	report and subtracted tokens from C's bucket.	
+
+Now, notice that both onlines are up to date. Both of their buckets for C reflect C's global request count.
+
+t=5.2	C make two further requests which both onlines	-3		-3
+	deny because of insufficient tokens
+
+t=6	C backs off while it's bucket gradually refills	-2		-2
+t=7	...						-1		-1
+t=8	...						0		0
+t=9	...						1		1
+...
+
+Now, 9 seconds have passed and C can finally make another request. Notice that C didn't gain anything by sending all it's requests in a burst up front. It could have achieved the same number requests by doing them regularly 1 per second. 
+
+C can now consume tokens at the rate they are replenished, or save them up for another burst. Either way, it's long term average will be the configured rate of 1 request/sec. 
+
+Query Protocol
+~~~~~~~~~~~~~~
+Use the following protocol to query a DThrottle about a client request. The protocol is line based, request/reply, and very simple.
+
+1. Open a connection to DThrottle
+2. Send a throttling tag followed by '\n'
+3. Wait for a response of exactly three bytes. "OK\n" if the request should be served, and "NO\n" if the request should be throttled.
+4. Goto step 2 if you want to send another query, or close the connection if not.
+
+DThrottle calculates the response to your queries locally so you should expect it to reply over the socket right away. When you have a client blocked on a thottling decision, be sure that your code is fail safe. Set timeouts on your socket I/O to be very short -- if DThrottle doesn't respond right away, some thing is wrong and you should continue processing the client's request. Even better would be to backoff future throttling queries in case of failure.
+
+Pipelining requests is OK.
+
+Config
+~~~~~~
+see /brazil-config/app/DThrottle.cfg for options and documentation

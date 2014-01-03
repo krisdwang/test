@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+
+<project xmlns:ht="happytrails" name="DirectoryServiceCommon-1.0" basedir="." default="release">
+
+  <import file="${happytrails.root}/happytrails.xml" optional="false"/>
+
+  <!-- Properties available from happytrails.xml :
+    run.classpath, test.classpath, build.classpath
+    verbose, output.dir, unit.test.dir -->
+  <!-- At this point new Ant Properties are available:
+         * run.classpath
+           Compile time classpath. This corresponds to dependencies that
+           come from the transative closure of your Config file
+           dependencies section.
+         * test.classpath
+           Test classpath. This corresponds to dependencies that
+           come from the transative closure of your Config file
+           test-dependencies section.
+         * build.classpath
+           Build classpath. This corresponds to dependencies that
+           come from the transative closure of your Config file
+           build-tools section.
+         * verbose
+           Verbosity flag. This will be set to "no" unless this
+           build is being run through PackageBuilder.
+         * output.dir
+           Location of your build output directory. This is where all
+           artifacts you produce need to be. This is an alias for
+           the amazon.ht2.bd.lib.output.dir property.
+     -->
+
+  <property name="lib.dir" location="${output.dir}/lib"/>
+
+  <property name="classes.dir" location="${output.dir}/private/classes"/>
+
+  <target name="compile">
+    <mkdir dir="${classes.dir}"/>
+    <javac srcdir="${basedir}/src/main/java" destdir="${classes.dir}" source="1.5" target="1.5" debug="on">
+      <classpath>
+        <path path="${bp:build.classpath}"/>
+      </classpath>
+   </javac>
+  </target>
+
+  <target name="build" depends="compile" description="Build a jar">
+    <mkdir dir="${lib.dir}"/>
+    <jar destfile="${lib.dir}/${ant.project.name}.jar" basedir="${classes.dir}" includes="**/*.class"/>
+  </target>
+
+  <target name="unit-tests" />
+
+  <target name="jar" depends="build" />
+
+  <target name="release" depends="jar" description="PackageBuilder entry point" />
+
+</project>

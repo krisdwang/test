@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<project name="CoralAvailability-1.0" basedir="." default="buildAndTest" xmlns:coral="antlib:com.amazon.coral" xmlns:ht="happytrails">
+
+	<import file="${happytrails.root}/happytrails.xml"/>
+
+	<property name="source.java.vm.version" value="1.6" />
+	<property name="target.java.vm.version" value="1.6" />
+	
+	<property name="findbugs.failOnError" value="false" />
+	<property name="checkstyle.failOnError" value="false" />
+	<property name="junit.halt" value="true" />
+
+	<ht:import file="coral-generator.xml" />
+	<ht:import file="happier-trails.xml" />
+
+	<property name="test.prop.log" value="-Dorg.apache.commons.logging.log=org.apache.commons.logging.impl.NoOpLog" />
+	<property name="test.prop.key" value="-D${coverage.key}=${coverage.file}" />
+	<property name="test.prop.encoding" value="-Dfile.encoding=UTF-8" />
+	<property name="tests.additional.jvmargs" value="${test.prop.log} ${test.prop.key} ${test.prop.encoding}" />
+
+	<property name="sources.javac.extra.args" value="-Xlint:all,-fallthrough,-serial,-deprecation" />
+
+	<target name="generate">
+		<!-- Generate the synthetic types -->
+		<coral:generate dir="${classes.dir}" mode="types,index" stalecheck="true" indexfactory="com.amazon.coral.availability.AvailabilityErrorModelIndexFactory">
+			<package name="CoralAvailabilityModel" />
+			<classpath path="${bp:build.classpath}" />
+		</coral:generate>
+	</target>
+
+	<target name="compile-generate-source" depends="generate">
+		<ht:compile srcdir="${basedir}/build/generated-src" destdir="${generated.classes.dir}" />
+	</target>
+
+	<target name="build" depends="compile-generate-source,standard-build" />
+
+	<target name="test-compile" depends="build, standard-test-compile">
+		<mkdir dir="${output.dir}/private/tmp" />
+	</target>
+	
+	<target name="buildAndTest" depends="build, test"/>
+</project>
+<!-- vim: set noet ts=8 sts=8 sw=8 : -->

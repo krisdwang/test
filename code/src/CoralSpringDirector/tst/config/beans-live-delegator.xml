@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+    <bean id="tally" class="com.amazon.coral.tally.Tally" />
+    
+    <bean id="workerA" class="com.amazon.coral.spring.director.test.sample.WorkerLivePure">
+        <constructor-arg ref="tally" />
+    </bean>
+    
+    <bean id="delegatorWorkerA" class="com.amazon.coral.spring.director.live.LiveDelegator">
+        <property name="delegate" ref="workerA" />
+    </bean>
+    
+    <bean id="listener" class="com.amazon.coral.spring.director.test.sample.ListenerLoggerPlus">
+        <constructor-arg ref="tally" />
+    </bean>
+    
+    <bean id="plan" class="com.amazon.coral.spring.director.Plan">
+        <property name="phase" value="100" />
+  
+        <property name="startup">
+            <list>
+                <bean class="com.amazon.coral.spring.director.fj.ForkJoinChain">
+                    <property name="events" value="acquire,activate" />
+                    <property name="targets" value="#{{@delegatorWorkerA}}"/>
+                    <property name="listener" ref="listener" />
+                </bean>
+            </list>
+        </property>
+        <property name="shutdown">
+            <list>
+                <bean class="com.amazon.coral.spring.director.fj.ForkJoinChain">
+                    <property name="events" value="deactivate,release" />
+                    <property name="targets" value="#{{@delegatorWorkerA}}"/>
+                    <property name="listener" ref="listener" />
+                </bean>
+            </list>
+        </property>
+    </bean>
+</beans>

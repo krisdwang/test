@@ -1,0 +1,76 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:jee="http://www.springframework.org/schema/jee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd 
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd http://www.springframework.org/schema/jee
+	http://www.springframework.org/schema/jee/spring-jee-3.0.xsd">
+
+	<!-- JNDI Datasource -->
+	<!-- 
+	<bean id="fba1DataSource" class="org.springframework.jndi.JndiObjectFactoryBean">
+		<property name="jndiName" value="/jdbc/ssof/fbaDataSource"></property>
+	</bean>
+	<bean id="mrpDataSource" class="org.springframework.jndi.JndiObjectFactoryBean">
+		<property name="jndiName" value="/jdbc/ssof/fbaDataSource"></property>
+	</bean>
+	
+	<jee:jndi-lookup id="fba1DataSource" jndi-name="/jdbc/ssof/fbaDataSource" />
+	<jee:jndi-lookup id="mrpDataSource" jndi-name="/jdbc/ssof/mrpDataSource" />
+	-->
+	
+	<bean id="fba1DataSource" class="amazon.SSOFSpring.support.AppConfigDataSourceFactory"/>
+	
+	<bean id="mrpDataSource"
+        class="amazon.SSOFSpring.support.AppConfigDataSourceFactory">
+        <constructor-arg>
+            <value>/jdbc/ssof/mrpDataSource</value>
+        </constructor-arg>
+	</bean>
+	
+	<!-- Dynamic Datasource -->
+	<bean id="dynamicDataSource"
+		class="com.amazon.fba.mic.dao.route.DynamicDataSource">
+		<property name="targetDataSources">
+			<map key-type="com.amazon.fba.mic.dao.route.DataSourceType">
+				<entry key="FBA1DS" value-ref="fba1DataSource" />
+				<entry key="MRPDS" value-ref="mrpDataSource" />
+			</map>
+		</property>
+		<property name="defaultTargetDataSource" ref="fba1DataSource" />
+	</bean>
+
+	<bean id="namingStrategy"
+		class="com.amazon.fba.mic.dao.namingstrategy.impl.NamingStrategyImpl" />
+
+	<bean id="finderIntroductionAdvisor"
+		class="com.amazon.fba.mic.dao.finder.impl.FinderIntroductionAdvisor" />
+	<bean id="dyncDsAnnotationInterceptor"
+		class="com.amazon.fba.mic.dao.route.DynaDSAnnotationIntercepter" />
+
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dynamicDataSource" />
+		<property name="configLocation" value="file:configuration/spring-config/mybatis-config.xml" />
+		<property name="mapperLocations">
+			<list>
+				<value>classpath:/mapping-config/*.xml</value>
+			</list>
+		</property>
+	</bean>
+
+	<bean id="abstractDaoTarget" class="com.amazon.fba.mic.dao.impl.GenericDaoImpl"
+		abstract="true" lazy-init="true">
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+		<property name="namingStrategy" ref="namingStrategy" />
+	</bean>
+
+	<bean id="abstractDao" class="org.springframework.aop.framework.ProxyFactoryBean"
+		abstract="true">
+		<property name="interceptorNames">
+			<list>
+				<value>dyncDsAnnotationInterceptor</value>
+				<value>finderIntroductionAdvisor</value>
+			</list>
+		</property>
+	</bean>
+</beans>

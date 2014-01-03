@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+
+<project xmlns:ht="happytrails" name="MessagingUtils-1.1" basedir="." default="release">
+
+    <property name="tests.additional.jvmargs" value="-ea" />
+
+    <import file="${happytrails.root}/happytrails.xml" optional="false"/>
+
+    <!-- Define HappierTrails property overrides here -->
+
+    <property name="findbugs.failOnError" value="false" />
+    <property name="checkstyle.failOnError" value="false" />
+
+    <property name="source.java.vm.version" value="1.6"/>
+    <property name="target.java.vm.version" value="1.6"/>
+    <!-- Cobertura doesn't work under JDK-1.7 without UseSplitVerifier-->
+    <property name="coverage.additional.jvmargs" value="${tests.additional.jvmargs} -XX:-UseSplitVerifier"/>
+    <target name="set-unit-test-jvmarg">
+        <property name="tests.additional.jvmargs" value="-XX:-UseSplitVerifier"/> 
+    </target>
+    <target name="unit-tests" depends="set-unit-test-jvmarg,standard-unit-tests"/>
+
+    <ht:import file="happier-trails.xml"/>
+
+    <target name="javadoc" depends="compile" description="Create cross-referenced javadoc">
+        <ht:taskdef classname="lombok.delombok.ant.DelombokTask" name="delombok" classpath="${bp:tool.classpath}"/>
+
+        <property name="delomboked.dir" value="${output.dir}/private/delomboked"/>
+        <mkdir dir="${delomboked.dir}"/>
+
+        <delombok verbose="true" encoding="UTF-8" to="${delomboked.dir}" from="${sources.dir}" />
+
+        <!-- This will create cross-referenced docs rewrites urls against package directory -->
+        <!-- Arguments passed to this task are documented here: 
+                http://ant.apache.org/manual/CoreTasks/javadoc.html -->
+        <ht:javadoc destDir="${javadoc.dir}" maxmemory="${javadoc.maxmemory}">
+            <classpath path="${classes.dir}:${generated.classes.dir}" />
+            <fileset dir="${delomboked.dir}" includes="**/*.java" />
+        </ht:javadoc>
+    </target>
+
+    <target name="hudson-build" 
+       depends="compile, compile-jar, test-compile"
+       description="Target for hudson to just build the code and nothing more"/>
+
+</project>

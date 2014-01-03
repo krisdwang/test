@@ -1,0 +1,40 @@
+package.CoralMetricsQuerylogReporter = {
+
+  build-system = happytrails;
+  interfaces = (1.0);
+
+  scope = framework;
+
+  caching-behavior = {
+    additional-directories = (brazil-documentation);
+  };
+
+  deploy = {
+    generic = true;
+  };
+
+  dependencies = {
+    1.0 = {
+      CoralMetricsReporter = 1.0;
+      JakartaCommons-logging-api = 1.1;
+    };
+  };
+
+  test-dependencies = {
+    1.0 = {
+      junit = 4;
+    };
+  };
+
+  build-tools = {
+    1.0 = {
+      JDK = 1.6;
+      HappierTrails = 3.1;
+    };
+  };
+
+  targets = {
+      CoralMetricsQuerylogReporter-1.0 = { type = javalibrary; };
+  };
+
+};

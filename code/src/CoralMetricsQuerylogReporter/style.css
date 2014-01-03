@@ -1,0 +1,45 @@
+
+div.protocol {
+
+  font-family: "Lucida Console", "Andale Mono", "monotype.com", "Bitstream Vera Sans Mono", "courier new", courier, monospace;
+  font-size: 1em;
+  font-style: normal;
+  font-weight: bold;
+  letter-spacing: 0em;
+
+  background-color: #e5e5ff;
+  color: #007;
+
+  padding: 1em 1em 2em 1em;
+  min-width: 5em;
+  border: 1px solid #007;
+	white-space: pre;
+  overflow: auto;
+
+}
+
+div.protocol em {
+  color: #333;
+  font-style: normal;
+  font-weight: normal;
+}
+
+div.protocol sup {
+  color: #444;
+  font-size: x-small;
+  font-style: normal;
+  font-weight: normal
+	vertical-align: text-top;
+}
+
+div.protocol span.footnote {
+  color: #444;
+  font-size: smaller;
+  font-style: normal;
+  font-weight: normal
+	vertical-align: text-bottom;
+}
+
+div.protocol i {
+  color: #077;
+}

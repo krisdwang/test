@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE suppressions PUBLIC
+    "-//Puppy Crawl//DTD Suppressions 1.1//EN"
+    "http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
+
+<suppressions>
+    <!-- Suppress javadoc checks
+         See https://p4db.amazon.com/source-views/p4db/brazil/fileViewer.cgi?FSPC=//brazil/src/shared/interface/CheckstyleAntBuildLogic/mainline/configuration/antfiles/config/checkstyle-rules.xml
+         And http://checkstyle.sourceforge.net/availablechecks.html
+    -->
+    <suppress checks="JavadocPackage" files=".*" /> <!-- does not work -->
+    <suppress checks="Javadoc" files="\.java$" />
+    <suppress checks="WhitespaceAround" files="\.java$" />
+    <suppress checks="WhitespaceAfter" files="\.java$" />
+    <suppress checks="ParenPad" files="\.java$" />
+    <suppress checks="OperatorWrap" files="\.java$" />
+    <suppress checks="NeedBraces" files="\.java$" />
+    <suppress checks="LineLength" files="\.java$" />
+    <suppress checks="ConstantName" files="\.java$" />
+    <suppress checks="ModifierOrder" files="\.java$" />
+    <suppress checks="FinalParameters" files="\.java$" />
+    <suppress checks="DoubleCheckedLocking" files="\.java$" />
+
+    <suppress checks="AvoidStarImport" files="QuerylogHelper\.java$" />
+    <suppress checks="AvoidInlineConditionals" files="QuerylogHelper\.java$" />
+    <suppress checks="HiddenField" files="JSTMigrationReporter.java$" />
+    <suppress checks="HiddenField" files="OldBsfMetricReporterFactory.java$" />
+    <suppress checks="MagicNumber" files=".*Format\.java$" />
+</suppressions>

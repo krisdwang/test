@@ -1,0 +1,89 @@
+# -*-perl-*-
+
+package.FBAMICDataAccessLayer = {
+    interfaces = (1.0);
+    scope = MIC;
+    deploy = {
+        generic = true;
+    };
+
+    dependencies = {
+        1.0 = {
+        	JakartaCommons-lang          				= 2.4;
+            SSOFCommon                   				= 1.0;
+            SSOFSpring 					 				= 1.0;            
+            SpringAOP                    				= 3.1;
+            SpringTx                     				= 3.1;
+            SpringJDBC                   				= 3.1;
+            AspectJWeaver                      				= 1.7;
+            SpringCore									= 3.1; 
+            SpringContext								= 3.1;                    
+            MyBatis                                 	= 3.1;
+            MyBatis-spring                          	= 1.1; 
+            AmazonAppConfigJava 		 				= 1.0;
+            AmazonCoralServiceSupport					= 1.1;
+            EHCache										= 1.6;
+            MetricsProducingDataSource					= 1.0;
+            MetricsProvider								= 1.0;
+            CoralMetricsQuerylogReporter				= 1.0;
+        };
+    };
+
+    test-dependencies = {
+        1.0 = {
+            junit                        				= 4.7;
+        	AmazonAppConfigJava 		 				= 1.0;
+            SpringTest                   				= 3.1;
+            EasyMock									= 3.0;                  
+        };
+    };
+    
+    runtime-dependencies = {
+        1.0 = {
+            AmazonDBAccessJava           				= 2.3;
+            oracle-java                  				= 11.2.0.3;
+            AmazonAppConfigJava 		 				= 1.0;
+        };
+    };
+
+    build-system = happytrails;
+    build-tools = {
+        1.0 = {
+            JDK                                                         = 1.7;
+            HappierTrails 								= 3.1;
+        };
+    };
+
+    resolves-conflict-dependencies = {
+        1.0 = {
+            AmazonDBAccessJava           				= 2.3;
+            oracle-java                  				= 11.2.0.3;
+            junit                       				= 4.7;
+            JakartaCommons-codec         				= 1.0;
+            JakartaCommons-lang          				= latest;
+            log4j                        				= latest;   
+            EasyMock 									= 3.0;
+            EasyMockClassExtension 						= 3.0;    
+            CGLib										= 2.2_nodep;
+            Objenesis									= 1.2;
+            ASM											= 3.2; 
+			SpringAOP                    				= 3.1;     
+			SpringTx                     				= 3.1;
+            SpringJDBC                   				= 3.1; 
+            SpringCore									= 3.1; 
+            SpringContext								= 3.1;
+            Dom4j										= 1.6;
+        };
+    };
+
+    remove-dependencies = {
+        1.0 = {
+            SpringFramework 							= 2.5;                       
+        };
+    };
+    # For more information on how to declare targets for HappyTrails packages
+    # see: https://w.amazon.com/?BrazilBuildSystem/HappyTrails/GettingStarted
+    targets = {
+        FBAMICDataAccessLayer-1.0 = { type = javalibrary; };
+    };
+};

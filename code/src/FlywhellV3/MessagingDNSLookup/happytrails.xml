@@ -1,0 +1,194 @@
+<?xml version="1.0"?>
+<!--
+
+  HappyTrails 2.0 Common Build File
+  Last updated:  $DateTime: 2008/07/16 06:58:22 $
+
+  ===========================================================================
+  SUPPORT NOTE:
+  ===========================================================================
+
+  We are Happy to provide this file for YOUR convenience!
+  However, as a condition of usage, you and your teammates
+  are expected to know how it works.
+
+  For more information on Ant and HappyTrails refer to the following
+  documents:
+
+  Ant Home Page:          http://ant.apache.org/manual/
+  HappyTrails Home Page:  https://w.amazon.com/?BrazilBuildSystem/HappyTrails
+  HappyTrails FAQ:        https://w.amazon.com/?BrazilBuildSystem/HappyTrails/FAQ
+
+  Thanks again for using HappyTrails 2.0!
+
+  ===========================================================================
+
+  INSTALLATION:
+
+  Copy this file into your package. Import it from your build.xml file. Enjoy!  :)
+
+
+  CHANGE NOTICE:
+
+  This file will change many times in the future.  It will never change in
+  _your_ package until you want it to!  Please keep an eye on the HappyTrails
+  home page so that you can pick up the latest and greatest changes!
+
+
+  USAGE:
+
+  You first must set a required environment variable that points to the 
+  MiniTrails 2.0 library needed to initialize HappyTrails.
+
+  export HT2_BOOTSTRAP_JAR=`/apollo/env/SDETools/bin/bootstrap-cache-package-version $WORKSPACE_ROOT MiniTrails 2.0`/lib/miniTrails-2.0.jar
+
+  Next, you must import the happytrails.xml into your build.xml
+
+  <project name="minimal">
+ 
+    <import file="happytrails.xml" optional="false"/>
+
+  </project>
+
+  This is all it takes to get HappyTrails 2.0 initialized. As a result, you 
+  will have all of the HappyTrails environment variables set up. 
+  (See https://w.amazon.com/?BrazilBuildSystem/HappyTrails/BuildPropertiesGuide)
+
+  Additionally,
+   * You will have a "clean" target created
+   * You will have an "apollo-pkg" target created 
+   * You will have a property ${output.dir} set as an alias to 
+     ${amazon.ht2.bd.thisPackage.build.dir}
+   * You will have a property ${verbose} set to true if you are running
+     under PackageBuilder. This can be passed to java, javac or other tasks
+     to get better logs from PackageBuilder when something goes wrong and
+     keep your desktop builds quiet
+
+  ACKNOWLEDGEMENTS:
+
+  This is adapted from Eric Crahen's TrailRunner examples. Thanks, Eric!
+
+-->
+<project
+  xmlns:ht2b="antlib:amazon.ht2.mini.trails.ant"
+  xmlns:ht2="antlib:amazon.ht2.trails.ant">
+
+  <property environment="env" />
+  <available property="htbootstrap.exists" file="${env.HT2_BOOTSTRAP_JAR}" />
+  <fail unless="htbootstrap.exists"  message="HT2_BOOTSTRAP_JAR environment variable not defined or jar does not exist! (Check '${env.HT2_BOOTSTRAP_JAR}')" />
+
+
+  <!-- MiniTrails 2.0 Bootstrap Task Definition (tasks with ht2b: prefix) -->
+  <taskdef resource="amazon/ht2/mini/trails/ant/antlib.xml" onerror="fail"
+    uri="antlib:amazon.ht2.mini.trails.ant" classpath="${env.HT2_BOOTSTRAP_JAR}" />
+
+
+  <ht2b:bootpath packages="HappyTrails-2.0"/>
+  <!-- 
+  Use the following instead to use Codigo
+  <ht2b:bootpath packages="HappyTrails-2.0, HappyTrailsCodigoPlugin-2.0" />
+   -->
+
+
+  <!-- HappyTrails 2.0 Task Definition (tasks with ht2: prefix) -->
+  <taskdef resource="amazon/ht2/trails/ant/antlib.xml" onerror="fail"
+    uri="antlib:amazon.ht2.trails.ant" classpath="${amazon.ht2.boot.path}" />
+
+
+  <!--
+     For more information about what this task does, see:
+
+     https://w.amazon.com/?BrazilBuildSystem/HappyTrails/AntTaskGuide/HT2Configure
+  -->
+  <ht2:configure />
+
+
+  <!--
+    For more information about how these properties get set up, see:
+
+     https://w.amazon.com/?BrazilBuildSystem/HappyTrails/BuildPropertiesGuide
+  -->
+  <mkdir dir="${amazon.ht2.bd.workspace.build.dir}" />
+  <mkdir dir="${amazon.ht2.bd.thisPackage.build.dir}" />
+  <mkdir dir="${amazon.ht2.bd.generated-ant.output.dir}" />
+  <mkdir dir="${amazon.ht2.bd.private.output.dir}" />
+  <mkdir dir="${amazon.ht2.bd.bin.output.dir}" />
+  <mkdir dir="${amazon.ht2.bd.lib.output.dir}" />
+  <mkdir dir="${amazon.ht2.bd.thisPackage.build.dir}/brazil-unit-tests" />
+
+  <!--
+    NOTE! interface.dep is required for PackageBuilder builds:
+    please see https://w.amazon.com/?BrazilBuildSystem/Reference/interface.dep
+  -->
+  <mkdir dir="${amazon.ht2.bd.interface.dep.output.dir}" />
+  <touch file="${amazon.ht2.bd.interface.dep.output.dir}/interface.dep" />
+
+  <!-- Don't create a build symlink on windows -->
+  <condition property="amazon.ht2.require.symlink" value="false" else="true">
+    <isset property="amazon.ht2.os.isWindows"/>
+  </condition>
+  <exec executable="ln"
+        failifexecutionfails="${amazon.ht2.require.symlink}"
+        failonerror="true">
+    <arg value="-s"/>
+    <arg value="-f"/>
+    <arg value="-n"/>
+    <arg value="${amazon.ht2.bd.thisPackage.build.dir}"/>
+    <arg value="build"/>
+  </exec>
+  
+  <target name="clean" description="removes package build directory">
+    <symlink action="delete" overwrite="true" link="build" failonerror="${amazon.ht2.require.symlink}"/>
+    <delete dir="${amazon.ht2.bd.thisPackage.build.dir}"/>
+  </target>
+
+  <target  name="apollo-pkg" depends="build">
+    <property name="overrides.dir" value="${amazon.ht2.bd.workspace.root.dir}/apollo-overrides"/>
+    <mkdir dir="${overrides.dir}"/>
+    <exec executable="/apollo/env/SDETools/bin/apolloBrazilTransform" failonerror="true">
+      <arg value="--type"/>         <arg value="Brazil"/>
+      <arg value="--package"/>      <arg value="${amazon.ht2.thisPackage.package.name}"/>
+      <arg value="--buildPath"/>    <arg value="${amazon.ht2.bd.bin.output.dir}/.."/>
+      <arg value="--srcPath"/>      <arg value="."/>
+      <arg value="--overrideRoot"/> <arg value="${overrides.dir}"/>
+    </exec>
+    <echo message="Created Apollo local override at: ${overrides.dir}"/>
+  </target>
+
+
+  <!--
+     For more information about what this task does, see:
+
+     https://w.amazon.com/?BrazilBuildSystem/HappyTrails/AntTaskGuide/HT2Resolve
+  -->
+  <ht2:resolve />
+
+
+  <!--
+     For more information about what this task does, see:
+
+     https://w.amazon.com/?BrazilBuildSystem/HappyTrails/AntTaskGuide/HT2Properties
+  -->
+  <ht2:properties />
+
+  <!--
+     For more information about what these tasks do, see:
+
+     https://w.amazon.com/?BrazilBuildSystem/HappyTrails/AntTaskGuide/HT2Path
+  -->
+  <ht2:path dependencyType="run"   artifactType="jar"  property="run.classpath"   />
+  <ht2:path dependencyType="build" artifactType="jar"  property="build.classpath" />
+  <ht2:path dependencyType="test"  artifactType="jar"  property="test.classpath"  />
+
+  <!-- Create a simple alias for output -->
+  <property name="output.dir" location="${amazon.ht2.bd.thisPackage.build.dir}" /> 
+
+  <!-- Detect PackageBuilder builds and set a flag to increase verbosity where appropriate -->
+  <condition property="verbose" value="false" else="true">
+    <or>
+      <not><isset property="env.BRAZIL_VERSION"/></not>  <!-- When ant is run locally -->
+      <equals arg1="${env.BRAZIL_VERSION}" arg2=""/>     <!-- When make is run locally -->
+    </or>
+  </condition>
+
+</project>

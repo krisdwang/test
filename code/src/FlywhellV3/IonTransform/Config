@@ -1,0 +1,47 @@
+# -*-perl-*-
+#  //brazil/src/shared/platform/IonTransform/mainline perforce:9591/Config
+
+package.IonTransform = {
+
+  interfaces = (1.0);
+
+  flavors = {
+    map = single;
+    generation = 1;
+  };
+
+  scope = framework;
+
+  deploy = {
+      generic = true;
+  };
+
+  dependencies = {
+    1.0 = {
+      ABDF=1.0;
+      DatagramConverter=1.0;
+    };
+  };
+
+  test-dependencies = {
+    1.0 = {
+      BrazilUnitTest = 1.0;
+      junit = 4.1;
+    };
+  };
+
+  build-system = happytrails;
+  build-tools = {
+    1.0 = {
+      JDK = 1.6;
+      ApacheAnt = 1.7;
+      HappyTrails = 2.0;
+      MiniTrails = 2.0;
+    };
+  };
+
+  targets = {
+      IonTransform-1.0 = { type = javalibrary; };
+  };
+
+};

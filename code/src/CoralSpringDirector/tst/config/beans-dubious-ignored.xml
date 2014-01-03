@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+    <bean id="tally" class="com.amazon.coral.tally.Tally" />
+    
+    <bean id="workerA" class="com.amazon.coral.spring.director.test.sample.WorkerA">
+        <constructor-arg ref="tally" />
+    </bean>
+    
+    <bean id="dcw" class="com.amazon.coral.spring.director.fj.DubiousConfigWarnStrategy" />
+
+    <bean id="planC" class="com.amazon.coral.spring.director.Plan">
+        <property name="phase" value="100" />
+        
+        <property name="startup">
+            <list>
+                <bean class="com.amazon.coral.spring.director.fj.ForkJoin">
+                    <property name="event" value="acquire" />
+                    <property name="dubiousConfigStrategy" ref="dcw" />
+                </bean>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="planC1" class="com.amazon.coral.spring.director.Plan">
+        <property name="phase" value="150" />
+        
+        <property name="startup">
+            <list>
+                <bean class="com.amazon.coral.spring.director.fj.ForkJoin">
+                    <property name="targets" value="#{{@workerA}}" />
+                    <property name="dubiousConfigStrategy" ref="dcw" />
+                </bean>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="planD" class="com.amazon.coral.spring.director.Plan">
+        <property name="phase" value="200" />
+        
+        <property name="startup">
+            <list>
+                <bean class="com.amazon.coral.spring.director.fj.ForkJoinChain">
+                    <property name="dubiousConfigStrategy" ref="dcw" />
+                </bean>
+            </list>
+        </property>
+    </bean>
+        
+</beans>

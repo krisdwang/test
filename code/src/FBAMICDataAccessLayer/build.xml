@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<project name="FBAMICDataAccessLayer-1.0" basedir="." default="release" xmlns:ht="happytrails">
+	<!-- Import HappyTrails first to initialize BrazilPath and define some default properties. -->
+	<import file="${happytrails.root}/happytrails.xml" />
+         <property name="tests.additional.jvmargs" value="-XX:-UseSplitVerifier"/>
+	<!-- Override HappierTrails properties here, after initializing HappyTrails, but before HappierTrails -->
+        <property name="source.java.vm.version" value="1.6" />
+        <property name="target.java.vm.version" value="1.6" />
+        <ht:import file="happier-trails.xml" />
+
+	<property name="ht.include.cfg" value="true" />
+	<property name="ht.include.test.jar" value="true" />
+
+	<target name="reports" depends="coverage" />
+
+	<target name="build" depends="standard-build" description="The default build target which runs standard-build">
+
+	</target>
+</project>
