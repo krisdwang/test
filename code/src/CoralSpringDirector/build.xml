@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-
-<project name="CoralSpringDirector-1.0" basedir="." xmlns:ht="happytrails">
-    <import file="${happytrails.root}/happytrails.xml"/>
-
-    <property name="checkstyle.configuration.file" value="checkstyle.xml"/>
-    
-    <ht:import file="happier-trails.xml"/>
-</project>
